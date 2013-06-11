@@ -20,6 +20,7 @@ import com.amazonaws.auth.BasicAWSCredentials
 import com.amazonaws.auth.AWSCredentialsProvider
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
 
+import com.amazonaws.ClientConfiguration
 import com.amazonaws.services.ec2.AmazonEC2Client
 import com.amazonaws.services.autoscaling.AmazonAutoScalingClient
 import com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClient
@@ -54,37 +55,49 @@ class AwsClient(val provider: AWSCredentialsProvider, val region: String) {
 
   /** create credential from provided arguments
     *
-    * @param accessKey for account access
+    :* @param accessKey for account access
     * @param secretKey for account access
     * @param region used to select endpoint for AWS service
     */
   def this(accessKey: String, secretKey: String, region: String) =
     this(new BasicAWSCredentials(accessKey, secretKey), region)
 
+  def conf = {
+
+    val conf = new ClientConfiguration()
+    if(System.getenv("HTTP_PROXY_HOST") != "") {
+            conf.setProxyHost(System.getenv("HTTP_PROXY_HOST"))
+    }
+    if(System.getenv("HTTP_PROXY_PORT") != "") {
+            conf.setProxyPort(System.getenv("HTTP_PROXY_PORT").toInt)
+    }
+    conf
+  }
+
   /** get [[com.amazonaws.services.ec2.AmazonEC2Client]] object */
   def ec2 = {
-    val client = new AmazonEC2Client(provider)
+    val client = new AmazonEC2Client(provider, conf)
     client.setEndpoint("ec2." + region + ".amazonaws.com")
     client
   }
 
   /** get [[com.amazonaws.services.autoscaling.AmazonAutoScalingClient]] object */
   def asg = {
-    val client = new AmazonAutoScalingClient(provider)
+    val client = new AmazonAutoScalingClient(provider, conf)
     client.setEndpoint("autoscaling." + region + ".amazonaws.com")
     client
   }
 
   /** get [[com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClient]] object */
   def elb = {
-    val client = new AmazonElasticLoadBalancingClient(provider)
+    val client = new AmazonElasticLoadBalancingClient(provider, conf)
     client.setEndpoint("elasticloadbalancing." + region + ".amazonaws.com")
     client
   }
 
   /** get [[com.amazonaws.services.s3.AmazonS3Client]] object */
   def s3 = {
-    val client = new AmazonS3Client(provider)
+    val client = new AmazonS3Client(provider, conf)
     if (region == "us-east-1")
       client.setEndpoint("s3.amazonaws.com")
     else
@@ -94,7 +107,7 @@ class AwsClient(val provider: AWSCredentialsProvider, val region: String) {
 
   /** get [[com.amazonaws.services.identitymanagement.AmazonIdentityManagementClient]] object */
   def identitymanagement = {
-    val client = new AmazonIdentityManagementClient(provider)
+    val client = new AmazonIdentityManagementClient(provider, conf)
     if (region == "us-gov")
       client.setEndpoint("iam.us-gov.amazonaws.com")
     else
@@ -104,27 +117,27 @@ class AwsClient(val provider: AWSCredentialsProvider, val region: String) {
 
   /** get [[com.amazonaws.services.sqs.AmazonSQSClient]] object */
   def sqs = {
-    val client = new AmazonSQSClient(provider)
+    val client = new AmazonSQSClient(provider, conf)
     client.setEndpoint("sqs." + region + ".amazonaws.com")
     client
   }
 
   /** get [[com.amazonaws.services.sqs.AmazonCloudWatchClient]] object */
   def cw = {
-    val client = new AmazonCloudWatchClient(provider)
+    val client = new AmazonCloudWatchClient(provider, conf)
     client.setEndpoint("monitoring." + region + ".amazonaws.com")
     client
   }
 
    /** get [[com.amazonaws.services.route53.AmazonRoute53Client]] object */
    def route53 = {
-      val client = new AmazonRoute53Client(provider)
+      val client = new AmazonRoute53Client(provider, conf)
       client.setEndpoint("route53.amazonaws.com")
       client
    }
 
    def rds = {
-     val client = new AmazonRDSClient(provider)
+     val client = new AmazonRDSClient(provider, conf)
      client.setEndpoint("rds.amazonaws.com")
      client
    }
